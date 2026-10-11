@@ -32,6 +32,85 @@ function CloseGlyph() {
   );
 }
 
+const HEART_FILL_PITCH = 58.5 / 45;
+
+function cubicPoint(start, controlOne, controlTwo, end, t) {
+  const inverse = 1 - t;
+  return {
+    x: inverse ** 3 * start.x + 3 * inverse ** 2 * t * controlOne.x + 3 * inverse * t ** 2 * controlTwo.x + t ** 3 * end.x,
+    y: inverse ** 3 * start.y + 3 * inverse ** 2 * t * controlOne.y + 3 * inverse * t ** 2 * controlTwo.y + t ** 3 * end.y,
+  };
+}
+
+function createHeartBoundary() {
+  const segments = [
+    [[50, 96], [43, 89], [0, 58], [0, 28]],
+    [[0, 28], [0, 12], [11, 0], [25, 0]],
+    [[25, 0], [33, 0], [42, 3], [50, 8]],
+    [[50, 8], [58, 3], [67, 0], [75, 0]],
+    [[75, 0], [89, 0], [100, 12], [100, 28]],
+    [[100, 28], [100, 58], [57, 89], [50, 96]],
+  ];
+  return segments.flatMap(([start, controlOne, controlTwo, end]) => (
+    Array.from({ length: 12 }, (_, index) => cubicPoint(
+      { x: start[0], y: start[1] },
+      { x: controlOne[0], y: controlOne[1] },
+      { x: controlTwo[0], y: controlTwo[1] },
+      { x: end[0], y: end[1] },
+      index / 12,
+    ))
+  ));
+}
+
+const HEART_BOUNDARY = createHeartBoundary();
+
+function heartContains(x, y) {
+  let inside = false;
+  for (let current = 0, previous = HEART_BOUNDARY.length - 1; current < HEART_BOUNDARY.length; previous = current, current += 1) {
+    const point = HEART_BOUNDARY[current];
+    const other = HEART_BOUNDARY[previous];
+    const crosses = (point.y > y) !== (other.y > y)
+      && x < ((other.x - point.x) * (y - point.y)) / (other.y - point.y) + point.x;
+    if (crosses) inside = !inside;
+  }
+  return inside;
+}
+
+function createHeartFillModules() {
+  const modules = [];
+  for (let row = -35; row < 80; row += 1) {
+    for (let column = -35; column < 80; column += 1) {
+      if (row >= 0 && row < 45 && column >= 0 && column < 45) continue;
+
+      const x = 50 - 58.5 / 2 + (column + 0.5) * HEART_FILL_PITCH;
+      const y = 50 - 58.5 / 2 + (row + 0.5) * HEART_FILL_PITCH;
+      const rotatedX = 50 + (x - 50) * Math.SQRT1_2 - (y - 50) * Math.SQRT1_2;
+      const rotatedY = 50 + (x - 50) * Math.SQRT1_2 + (y - 50) * Math.SQRT1_2;
+      if (!heartContains(rotatedX, rotatedY)) continue;
+
+      const noise = Math.abs(Math.sin(column * 127.1 + row * 311.7) * 43758.5453) % 1;
+      if (noise < 0.3) continue;
+      modules.push({ x: x - HEART_FILL_PITCH * 0.44, y: y - HEART_FILL_PITCH * 0.44 });
+    }
+  }
+  return modules;
+}
+
+const HEART_FILL_MODULES = createHeartFillModules();
+
+function HeartQrFill() {
+  return (
+    <svg className="qr-heart-frame__fill" viewBox="0 0 100 100" aria-hidden="true">
+      <path className="qr-heart-frame__paper" d="M50 96C43 89 0 58 0 28 0 12 11 0 25 0c8 0 17 3 25 8 8-5 17-8 25-8 14 0 25 12 25 28 0 30-43 61-50 68Z" />
+      <g className="qr-heart-frame__modules" transform="rotate(45 50 50)">
+        {HEART_FILL_MODULES.map((module, index) => (
+          <rect key={index} x={module.x} y={module.y} width={HEART_FILL_PITCH * 0.88} height={HEART_FILL_PITCH * 0.88} />
+        ))}
+      </g>
+    </svg>
+  );
+}
+
 function Dialog({ dialogRef, onClose, children, className, label }) {
   const closeOnBackdrop = (event) => {
     if (event.target === event.currentTarget) onClose();
@@ -205,16 +284,14 @@ export default function App() {
                     value={shareUrl}
                     size={218}
                     level="H"
-                    bgColor="#fffdf7"
-                    fgColor="#191516"
+                    bgColor="transparent"
+                    fgColor="#96364f"
                     includeMargin
                     title="Escanea para abrir la dedicatoria para Taji"
                   />
                 </div>
+                <HeartQrFill />
               </div>
-              <svg className="qr-heart-frame__outline" viewBox="0 0 100 100" aria-hidden="true">
-                <path d="M50 96C43 89 0 58 0 28 0 12 11 0 25 0c8 0 17 3 25 8 8-5 17-8 25-8 14 0 25 12 25 28 0 30-43 61-50 68Z" />
-              </svg>
             </div>
             <button className="primary-button copy-button" type="button" onClick={copyLink}>
               <span aria-hidden="true">↗</span>
