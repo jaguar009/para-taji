@@ -198,21 +198,23 @@ export default function App() {
             <HeartMark className="share-content__heart" />
             <h2 id="share-title">Guarda esta dedicatoria</h2>
             <p>Escanea el código para volver a ella.</p>
-            <div className="qr-heart-frame" aria-label="Código QR enmarcado con forma de corazón">
-              <svg className="qr-heart-frame__outline" viewBox="0 0 300 280" aria-hidden="true">
-                <path d="M150 263C127 240 22 176 22 105 22 58 54 29 94 29c24 0 43 13 56 34 13-21 32-34 56-34 40 0 72 29 72 76 0 71-105 135-128 158Z" />
-              </svg>
-              <div className="qr-code">
-                <QRCodeSVG
-                  value={shareUrl}
-                  size={218}
-                  level="H"
-                  bgColor="#fffdf7"
-                  fgColor="#191516"
-                  includeMargin
-                  title="Escanea para abrir la dedicatoria para Taji"
-                />
+            <div className="qr-heart-frame" aria-label="Código QR con silueta de corazón">
+              <div className="qr-heart-frame__shape">
+                <div className="qr-code">
+                  <QRCodeSVG
+                    value={shareUrl}
+                    size={218}
+                    level="H"
+                    bgColor="#fffdf7"
+                    fgColor="#191516"
+                    includeMargin
+                    title="Escanea para abrir la dedicatoria para Taji"
+                  />
+                </div>
               </div>
+              <svg className="qr-heart-frame__outline" viewBox="0 0 100 100" aria-hidden="true">
+                <path d="M50 96C43 89 0 58 0 28 0 12 11 0 25 0c8 0 17 3 25 8 8-5 17-8 25-8 14 0 25 12 25 28 0 30-43 61-50 68Z" />
+              </svg>
             </div>
             <button className="primary-button copy-button" type="button" onClick={copyLink}>
               <span aria-hidden="true">↗</span>
